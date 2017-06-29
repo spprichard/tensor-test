@@ -18,3 +18,6 @@ This repository is meant for testing/learning TensorFlow
 
     - To run (with time taken to run script):
         time python3 mnist-nn.py
+
+    - To view TensorBoard run:
+         tensorboard --logdir=./logs/nn_logs

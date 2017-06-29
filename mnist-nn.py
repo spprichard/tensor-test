@@ -13,8 +13,8 @@ num_classes = 10
 batch_size = 100
 
 #Compress the 28 X 28 impage to 784 X 1 array
-x = tf.placeholder('float', [None, 784])
-y = tf.placeholder("float")
+x = tf.placeholder('float', [None, 784], name="X")
+y = tf.placeholder("float", name="Y")
 
 def neural_network(data):
     hidden_layer_1 = {"weights" : tf.Variable(tf.random_normal([784, num_nodes_hl1])),
@@ -30,15 +30,17 @@ def neural_network(data):
                     "biases" : tf.Variable(tf.random_normal([num_classes]))}
 
     # (input * weights) + bias
+    with tf.name_scope("hidden_layer_1"):
+        l1 = tf.add(tf.matmul(data, hidden_layer_1['weights']), hidden_layer_1['biases'])
+        l1 = tf.nn.relu(l1)
 
-    l1 = tf.add(tf.matmul(data, hidden_layer_1['weights']), hidden_layer_1['biases'])
-    l1 = tf.nn.relu(l1)
+    with tf.name_scope("hidden_layer_2"):
+        l2 = tf.add(tf.matmul(l1, hidden_layer_2["weights"]), hidden_layer_2['biases'])
+        l2 = tf.nn.relu(l2)
 
-    l2 = tf.add(tf.matmul(l1, hidden_layer_2["weights"]), hidden_layer_2['biases'])
-    l2 = tf.nn.relu(l2)
-
-    l3 = tf.add(tf.matmul(l2, hidden_layer_3['weights']), hidden_layer_3['biases'])
-    l3 = tf.nn.relu(l3)
+    with tf.name_scope("hidden_layer_3"):
+        l3 = tf.add(tf.matmul(l2, hidden_layer_3['weights']), hidden_layer_3['biases'])
+        l3 = tf.nn.relu(l3)
 
     output = tf.matmul(l3, output_layer['weights']) + output_layer['biases']
 
@@ -46,10 +48,12 @@ def neural_network(data):
 
 def train_nn(x):
     prediction = neural_network(x)
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
-    # default learning rate 0.0001
-    optimizer = tf.train.AdamOptimizer().minimize(cost)
 
+    with tf.name_scope("cost"):
+        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=prediction, labels=y))
+        # default learning rate 0.0001
+        optimizer = tf.train.AdamOptimizer().minimize(cost)
+        tf.summary.scalar("cost", cost)
     num_epochs = 10
 
     with tf.Session() as sess:
@@ -62,8 +66,13 @@ def train_nn(x):
                 epoch_loss += c
             print('Epoch: ', epoch, 'completed out of: ', num_epochs, 'loss: ', epoch_loss)
 
-        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+        with tf.name_scope("accuracy"):
+            correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+            accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+            tf.summary.scalar("accuracy", accuracy)
         print('Accuracy: ', accuracy.eval({x:mnist.test.images, y: mnist.test.labels}))
+        writer = tf.summary.FileWriter("./logs/nn_logs", sess.graph)
+        merged = tf.summary.merge_all
+        sess.close()
 
 train_nn(x)
