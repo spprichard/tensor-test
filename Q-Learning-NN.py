@@ -1,9 +1,9 @@
 import tensorflow as tf
 import numpy as np
-import gym
-from gym import wrappers
 import tempfile
-import matplotlib.pyplot as plt
+from gym.scoreboard import scoring
+from gym import wrappers
+import gym
 
 tdir = tempfile.mkdtemp()
 #This example is for the FrozenLake-v0 environment
@@ -13,8 +13,8 @@ env = wrappers.Monitor(env, tdir, force=True)
 tf.reset_default_graph()
 
 #Create Feed-Forward part of NN
-inputs1 = tf.placeholder(shape=[1,16], dtype=tf.float32)
-W = tf.Variable(tf.random_uniform([16,4], 0, 0.01))
+inputs1 = tf.placeholder(shape=[1,16], dtype=tf.float32, name="Inputs1")
+W = tf.Variable(tf.random_uniform([16,4], 0, 0.01), name="Weights")
 Qout = tf.matmul(inputs1, W)
 predict = tf.argmax(Qout, 1)
 
@@ -74,5 +74,6 @@ with tf.Session() as sess:
         rList.append(rAll)
 
 print ("Percent of succesful episodes: " + str(sum(rList)/num_episodes) + "%")
+print ("Score: ", scoring.score_from_local(tdir))
 env.close()
 gym.upload(tdir, api_key='sk_nEH5oOSpRuawpTyUep74uA ')

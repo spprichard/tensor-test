@@ -21,3 +21,6 @@ This repository is meant for testing/learning TensorFlow
 
     - To view TensorBoard run:
          tensorboard --logdir=./logs/nn_logs
+
+4) <b>Q-Learning:</b>
+    - Basic implementation of Q-Learning Algorithm
